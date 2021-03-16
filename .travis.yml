@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -f orkhanrustamli/client-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true orkhanrustamli/client-test npm run test
+
+after_success:
+  - docker build -t orkhanrustamli/multi-client ./client
+  - docker build -t orkhanrustamli/multi-nginx ./nginx
+  - docker build -t orkhanrustamli/multi-server ./server
+  - docker build -t orkhanrustamli/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push orkhanrustamli/multi-client
+  - docker push orkhanrustamli/multi-nginx
+  - docker push orkhanrustamli/multi-server
+  - docker push orkhanrustamli/multi-worker
